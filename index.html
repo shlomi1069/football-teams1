@@ -1,10 +1,151 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="he">
 <head>
   <meta charset="UTF-8">
-  <title>It works</title>
+  <title>חלוקת קבוצות כדורגל</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2ecc71">
+
+
+  <style>
+    body {
+      font-family: Arial;
+      direction: rtl;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    input, select, button {
+      margin: 5px;
+      padding: 5px;
+    }
+    .team {
+      background: white;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
-  <h1>🎉 Netlify עובד!</h1>
+
+  <h1>⚽ חלוקת קבוצות מאוזנות</h1>
+
+  <h3>הוסף שחקן</h3>
+  <input id="name" placeholder="שם שחקן">
+  
+  <select id="position">
+    <option value="שוער">שוער</option>
+    <option value="הגנה">הגנה</option>
+    <option value="קישור">קישור</option>
+    <option value="חלוץ">חלוץ</option>
+  </select>
+
+  <input id="level" type="number" min="1" max="10" placeholder="רמה (1-10)">
+  
+  <button onclick="addPlayer()">הוסף</button>
+
+  <h3>שחקנים</h3>
+  <ul id="playersList"></ul>
+
+  <button onclick="makeTeams()">צור קבוצות</button>
+<button onclick="resetAll()">איפוס</button>
+
+
+  <div class="team">
+    <h3>קבוצה A</h3>
+    <ul id="teamA"></ul>
+    <strong id="scoreA"></strong>
+  </div>
+
+  <div class="team">
+    <h3>קבוצה B</h3>
+    <ul id="teamB"></ul>
+    <strong id="scoreB"></strong>
+  </div>
+<script>
+let players = [];
+
+function positionBonus(position) {
+  if (position === "שוער") return 3;
+  if (position === "חלוץ") return 2;
+  return 1;
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+
+function resetAll() {
+  players = [];
+
+  document.getElementById("playersList").innerHTML = "";
+  document.getElementById("teamA").innerHTML = "";
+  document.getElementById("teamB").innerHTML = "";
+  document.getElementById("scoreA").innerText = "";
+  document.getElementById("scoreB").innerText = "";
+}
+
+
+function addPlayer() {
+  const name = document.getElementById("name").value;
+  const position = document.getElementById("position").value;
+  const level = Number(document.getElementById("level").value);
+
+  if (!name || !level) {
+    alert("מלא שם ורמה");
+    return;
+  }
+
+  players.push({ name, position, level });
+
+  document.getElementById("playersList").innerHTML +=
+    `<li>${name} - ${position} - רמה ${level}</li>`;
+
+  document.getElementById("name").value = "";
+  document.getElementById("level").value = "";
+}
+
+function makeTeams() {
+  let teamA = [];
+  let teamB = [];
+  let scoreA = 0;
+  let scoreB = 0;
+
+  const positionsOrder = ["שוער", "הגנה", "קישור", "חלוץ"];
+
+  positionsOrder.forEach(position => {
+    const group = players
+      .filter(p => p.position === position)
+      .sort((a, b) => b.level - a.level);
+
+    group.forEach(player => {
+      const value = player.level + positionBonus(player.position);
+
+      if (scoreA <= scoreB) {
+        teamA.push(player);
+        scoreA += value;
+      } else {
+        teamB.push(player);
+        scoreB += value;
+      }
+    });
+  });
+
+  document.getElementById("teamA").innerHTML =
+    teamA.map(p => `<li>${p.name} (${p.position})</li>`).join("");
+
+  document.getElementById("teamB").innerHTML =
+    teamB.map(p => `<li>${p.name} (${p.position})</li>`).join("");
+
+  document.getElementById("scoreA").innerText = "כוח: " + scoreA;
+  document.getElementById("scoreB").innerText = "כוח: " + scoreB;
+}
+
+
+</script>
+
+
 </body>
 </html>
